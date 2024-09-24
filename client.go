@@ -126,6 +126,16 @@ func NewClientStartTLS(conn net.Conn, tlsConfig *tls.Config) (*Client, error) {
 	return c, nil
 }
 
+func NewClientStartTLSWithLocalName(conn net.Conn, tlsConfig *tls.Config, localName string) (*Client, error) {
+	c := NewClient(conn)
+	c.SetLocalName(localName)
+	if err := initStartTLS(c, tlsConfig); err != nil {
+		c.Close()
+		return nil, err
+	}
+	return c, nil
+}
+
 func initStartTLS(c *Client, tlsConfig *tls.Config) error {
 	if err := c.hello(); err != nil {
 		return err
@@ -222,6 +232,10 @@ func (c *Client) hello() error {
 	return c.helloError
 }
 
+func (c *Client) SetLocalName(name string) {
+	c.localName = name
+}
+
 // Hello sends a HELO or EHLO to the server as the given host name.
 // Calling this method is only necessary if the client needs control
 // over the host name used. The client will introduce itself as "localhost"
@@ -229,6 +243,7 @@ func (c *Client) hello() error {
 // any of the other methods.
 //
 // If server returns an error, it will be of type *SMTPError.
+
 func (c *Client) Hello(localName string) error {
 	if err := validateLine(localName); err != nil {
 		return err
