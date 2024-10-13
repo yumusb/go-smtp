@@ -116,6 +116,22 @@ func NewClient(conn net.Conn) *Client {
 	return c
 }
 
+// NewClientWithLocalName creates a new Client with a custom local name.
+func NewClientWithLocalName(conn net.Conn, localName string) *Client {
+	c := &Client{
+		localName: localName,
+		// As recommended by RFC 5321. For DATA command reply (3xx one) RFC
+		// recommends a slightly shorter timeout but we do not bother
+		// differentiating these.
+		CommandTimeout: 5 * time.Minute,
+		// 10 minutes + 2 minute buffer in case the server is doing transparent
+		// forwarding and also follows recommended timeouts.
+		SubmissionTimeout: 12 * time.Minute,
+	}
+	c.setConn(conn)
+	return c
+}
+
 // NewClientStartTLS creates a new Client and performs a STARTTLS command.
 func NewClientStartTLS(conn net.Conn, tlsConfig *tls.Config) (*Client, error) {
 	c := NewClient(conn)
